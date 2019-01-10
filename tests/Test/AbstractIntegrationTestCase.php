@@ -48,8 +48,6 @@ use Symfony\Component\Finder\SplFileInfo;
  * {"indent": "    ", "lineEnding": "\n"}
  * --SETTINGS--*
  * {"key": "value"} # optional extension point for custom IntegrationTestCase class
- * --REQUIREMENTS--*
- * {"php": 50600**}
  * --EXPECT--
  * Expected code after fixing
  * --INPUT--*
@@ -83,7 +81,7 @@ abstract class AbstractIntegrationTestCase extends TestCase
         self::$fileRemoval->observe($tmpFile);
 
         if (!is_file($tmpFile)) {
-            $dir = dirname($tmpFile);
+            $dir = \dirname($tmpFile);
 
             if (!is_dir($dir)) {
                 $fs = new Filesystem();
@@ -204,8 +202,8 @@ abstract class AbstractIntegrationTestCase extends TestCase
      */
     protected function doTest(IntegrationCase $case)
     {
-        if (PHP_VERSION_ID < $case->getRequirement('php')) {
-            $this->markTestSkipped(sprintf('PHP %d (or later) is required for "%s", current "%d".', $case->getRequirement('php'), $case->getFileName(), PHP_VERSION_ID));
+        if (\PHP_VERSION_ID < $case->getRequirement('php')) {
+            $this->markTestSkipped(sprintf('PHP %d (or later) is required for "%s", current "%d".', $case->getRequirement('php'), $case->getFileName(), \PHP_VERSION_ID));
         }
 
         $input = $case->getInputCode();
@@ -275,7 +273,7 @@ abstract class AbstractIntegrationTestCase extends TestCase
             )
         );
 
-        if (1 < count($fixers)) {
+        if (1 < \count($fixers)) {
             $tmpFile = static::getTempFile();
             if (false === @file_put_contents($tmpFile, $input)) {
                 throw new IOException(sprintf('Failed to write to tmp. file "%s".', $tmpFile));
@@ -326,7 +324,7 @@ abstract class AbstractIntegrationTestCase extends TestCase
         if ($fixedInputCode !== $fixedInputCodeWithReversedFixers) {
             static::assertGreaterThan(
                 1,
-                count(array_unique(array_map(
+                \count(array_unique(array_map(
                     static function (FixerInterface $fixer) {
                         return $fixer->getPriority();
                     },
@@ -355,7 +353,8 @@ abstract class AbstractIntegrationTestCase extends TestCase
             ->setWhitespacesConfig(
                 new WhitespacesFixerConfig($config['indent'], $config['lineEnding'])
             )
-            ->getFixers();
+            ->getFixers()
+        ;
     }
 
     /**
@@ -386,13 +385,16 @@ abstract class AbstractIntegrationTestCase extends TestCase
                 $linterProphecy = $this->prophesize(\PhpCsFixer\Linter\LinterInterface::class);
                 $linterProphecy
                     ->lintSource(Argument::type('string'))
-                    ->willReturn($this->prophesize(\PhpCsFixer\Linter\LintingResultInterface::class)->reveal());
+                    ->willReturn($this->prophesize(\PhpCsFixer\Linter\LintingResultInterface::class)->reveal())
+                ;
                 $linterProphecy
                     ->lintFile(Argument::type('string'))
-                    ->willReturn($this->prophesize(\PhpCsFixer\Linter\LintingResultInterface::class)->reveal());
+                    ->willReturn($this->prophesize(\PhpCsFixer\Linter\LintingResultInterface::class)->reveal())
+                ;
                 $linterProphecy
                     ->isAsync()
-                    ->willReturn(false);
+                    ->willReturn(false)
+                ;
 
                 $linter = $linterProphecy->reveal();
             } else {

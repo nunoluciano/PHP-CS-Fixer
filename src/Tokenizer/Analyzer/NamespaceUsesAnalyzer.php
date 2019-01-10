@@ -68,6 +68,7 @@ final class NamespaceUsesAnalyzer
         $fullName = $shortName = '';
         $aliased = false;
 
+        $type = NamespaceUseAnalysis::TYPE_CLASS;
         for ($i = $startIndex; $i <= $endIndex; ++$i) {
             $token = $tokens[$i];
             if ($token->equals(',') || $token->isGivenKind(CT::T_GROUP_IMPORT_BRACE_CLOSE)) {
@@ -76,7 +77,13 @@ final class NamespaceUsesAnalyzer
                 return null;
             }
 
-            if ($token->isWhitespace() || $token->isComment() || $token->isGivenKind([T_USE])) {
+            if ($token->isGivenKind(CT::T_FUNCTION_IMPORT)) {
+                $type = NamespaceUseAnalysis::TYPE_FUNCTION;
+            } elseif ($token->isGivenKind(CT::T_CONST_IMPORT)) {
+                $type = NamespaceUseAnalysis::TYPE_CONSTANT;
+            }
+
+            if ($token->isWhitespace() || $token->isComment() || $token->isGivenKind(T_USE)) {
                 continue;
             }
 
@@ -97,7 +104,8 @@ final class NamespaceUsesAnalyzer
             $shortName,
             $aliased,
             $startIndex,
-            $endIndex
+            $endIndex,
+            $type
         );
     }
 }

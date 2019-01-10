@@ -35,8 +35,8 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 final class Application extends BaseApplication
 {
-    const VERSION = '2.11.2-DEV';
-    const VERSION_CODENAME = 'Grey Devil';
+    const VERSION = '2.14.1-DEV';
+    const VERSION_CODENAME = 'Sunrise';
 
     /**
      * @var ToolInfo
@@ -45,7 +45,9 @@ final class Application extends BaseApplication
 
     public function __construct()
     {
-        error_reporting(-1);
+        if (!getenv('PHP_CS_FIXER_FUTURE_MODE')) {
+            error_reporting(-1);
+        }
 
         parent::__construct('PHP CS Fixer', self::VERSION);
 

@@ -150,8 +150,6 @@ final class ConfigurationResolver
     private $fixerFactory;
 
     /**
-     * ConfigurationResolver constructor.
-     *
      * @param ConfigInterface   $config
      * @param array             $options
      * @param string            $cwd
@@ -232,7 +230,7 @@ final class ConfigurationResolver
 
                 // verify that the config has an instance of Config
                 if (!$config instanceof ConfigInterface) {
-                    throw new InvalidConfigurationException(sprintf('The config file: "%s" does not return a "PhpCsFixer\ConfigInterface" instance. Got: "%s".', $configFile, is_object($config) ? get_class($config) : gettype($config)));
+                    throw new InvalidConfigurationException(sprintf('The config file: "%s" does not return a "PhpCsFixer\ConfigInterface" instance. Got: "%s".', $configFile, \is_object($config) ? \get_class($config) : \gettype($config)));
                 }
 
                 $this->config = $config;
@@ -309,9 +307,9 @@ final class ConfigurationResolver
 
             $absolutePath = $filesystem->isAbsolutePath($path)
                 ? $path
-                : $this->cwd.DIRECTORY_SEPARATOR.$path;
+                : $this->cwd.\DIRECTORY_SEPARATOR.$path;
 
-            $this->directory = new Directory(dirname($absolutePath));
+            $this->directory = new Directory(\dirname($absolutePath));
         }
 
         return $this->directory;
@@ -326,7 +324,8 @@ final class ConfigurationResolver
             $this->fixers = $this->createFixerFactory()
                 ->useRuleSet($this->getRuleSet())
                 ->setWhitespacesConfig(new WhitespacesFixerConfig($this->config->getIndent(), $this->config->getLineEnding()))
-                ->getFixers();
+                ->getFixers()
+            ;
 
             if (false === $this->getRiskyAllowed()) {
                 $riskyFixers = array_map(
@@ -341,8 +340,8 @@ final class ConfigurationResolver
                     )
                 );
 
-                if (count($riskyFixers)) {
-                    throw new InvalidConfigurationException(sprintf('The rules contain risky fixers (%s), but they are not allowed to run. Perhaps you forget to use --allow-risky option?', implode(', ', $riskyFixers)));
+                if (\count($riskyFixers)) {
+                    throw new InvalidConfigurationException(sprintf('The rules contain risky fixers (%s), but they are not allowed to run. Perhaps you forget to use --allow-risky=yes option?', implode(', ', $riskyFixers)));
                 }
             }
         }
@@ -373,14 +372,14 @@ final class ConfigurationResolver
             $filesystem = new Filesystem();
             $cwd = $this->cwd;
 
-            if (1 === count($this->options['path']) && '-' === $this->options['path'][0]) {
+            if (1 === \count($this->options['path']) && '-' === $this->options['path'][0]) {
                 $this->path = $this->options['path'];
             } else {
                 $this->path = array_map(
                     static function ($path) use ($cwd, $filesystem) {
                         $absolutePath = $filesystem->isAbsolutePath($path)
                             ? $path
-                            : $cwd.DIRECTORY_SEPARATOR.$path;
+                            : $cwd.\DIRECTORY_SEPARATOR.$path;
 
                         if (!file_exists($absolutePath)) {
                             throw new InvalidConfigurationException(sprintf(
@@ -419,13 +418,13 @@ final class ConfigurationResolver
                     }
 
                     $progressType = $this->getConfig()->getHideProgress() ? 'none' : $default;
-                } elseif (!in_array($progressType, $progressTypes, true)) {
+                } elseif (!\in_array($progressType, $progressTypes, true)) {
                     throw new InvalidConfigurationException(sprintf(
                         'The progress type "%s" is not defined, supported are "%s".',
                         $progressType,
                         implode('", "', $progressTypes)
                     ));
-                } elseif (in_array($progressType, ['estimating', 'estimating-max', 'run-in'], true)) {
+                } elseif (\in_array($progressType, ['estimating', 'estimating-max', 'run-in'], true)) {
                     $message = 'Passing `estimating`, `estimating-max` or `run-in` is deprecated and will not be supported in 3.0, use `none` or `dots` instead.';
 
                     if (getenv('PHP_CS_FIXER_FUTURE_MODE')) {
@@ -574,9 +573,9 @@ final class ConfigurationResolver
 
         $path = $this->getPath();
 
-        if ($this->isStdIn() || 0 === count($path)) {
+        if ($this->isStdIn() || 0 === \count($path)) {
             $configDir = $this->cwd;
-        } elseif (1 < count($path)) {
+        } elseif (1 < \count($path)) {
             throw new InvalidConfigurationException('For multiple paths config parameter is required.');
         } elseif (is_file($path[0]) && $dirName = pathinfo($path[0], PATHINFO_DIRNAME)) {
             $configDir = $dirName;
@@ -585,13 +584,13 @@ final class ConfigurationResolver
         }
 
         $candidates = [
-            $configDir.DIRECTORY_SEPARATOR.'.php_cs',
-            $configDir.DIRECTORY_SEPARATOR.'.php_cs.dist',
+            $configDir.\DIRECTORY_SEPARATOR.'.php_cs',
+            $configDir.\DIRECTORY_SEPARATOR.'.php_cs.dist',
         ];
 
         if ($configDir !== $this->cwd) {
-            $candidates[] = $this->cwd.DIRECTORY_SEPARATOR.'.php_cs';
-            $candidates[] = $this->cwd.DIRECTORY_SEPARATOR.'.php_cs.dist';
+            $candidates[] = $this->cwd.\DIRECTORY_SEPARATOR.'.php_cs';
+            $candidates[] = $this->cwd.\DIRECTORY_SEPARATOR.'.php_cs.dist';
         }
 
         return $candidates;
@@ -645,7 +644,7 @@ final class ConfigurationResolver
     private function isStdIn()
     {
         if (null === $this->isStdIn) {
-            $this->isStdIn = 1 === count($this->options['path']) && '-' === $this->options['path'][0];
+            $this->isStdIn = 1 === \count($this->options['path']) && '-' === $this->options['path'][0];
         }
 
         return $this->isStdIn;
@@ -658,7 +657,7 @@ final class ConfigurationResolver
      */
     private function iterableToTraversable($iterable)
     {
-        return is_array($iterable) ? new \ArrayIterator($iterable) : $iterable;
+        return \is_array($iterable) ? new \ArrayIterator($iterable) : $iterable;
     }
 
     /**
@@ -718,7 +717,7 @@ final class ConfigurationResolver
          */
         $ruleSet = [];
         foreach ($rules as $key => $value) {
-            if (is_int($key)) {
+            if (\is_int($key)) {
                 throw new InvalidConfigurationException(sprintf('Missing value for "%s" rule/set.', $value));
             }
 
@@ -741,7 +740,7 @@ final class ConfigurationResolver
             $availableFixers
         );
 
-        if (count($unknownFixers)) {
+        if (\count($unknownFixers)) {
             $matcher = new WordMatcher($availableFixers);
 
             $message = 'The rules contain unknown fixers: ';
@@ -789,7 +788,7 @@ final class ConfigurationResolver
 
         $modes = [self::PATH_MODE_OVERRIDE, self::PATH_MODE_INTERSECTION];
 
-        if (!in_array(
+        if (!\in_array(
             $this->options['path-mode'],
             $modes,
             true
@@ -810,7 +809,7 @@ final class ConfigurationResolver
             $this->getPath()
         ));
 
-        if (!count($paths)) {
+        if (!\count($paths)) {
             if ($isIntersectionPathMode) {
                 return new \ArrayIterator([]);
             }
@@ -827,7 +826,7 @@ final class ConfigurationResolver
             if (is_file($path)) {
                 $pathsByType['file'][] = $path;
             } else {
-                $pathsByType['dir'][] = $path.DIRECTORY_SEPARATOR;
+                $pathsByType['dir'][] = $path.\DIRECTORY_SEPARATOR;
             }
         }
 
@@ -851,7 +850,7 @@ final class ConfigurationResolver
                 static function (\SplFileInfo $current) use ($pathsByType) {
                     $currentRealPath = $current->getRealPath();
 
-                    if (in_array($currentRealPath, $pathsByType['file'], true)) {
+                    if (\in_array($currentRealPath, $pathsByType['file'], true)) {
                         return true;
                     }
 
@@ -901,11 +900,11 @@ final class ConfigurationResolver
     private function resolveOptionBooleanValue($optionName)
     {
         $value = $this->options[$optionName];
-        if (is_bool($value)) {
+        if (\is_bool($value)) {
             return $value;
         }
 
-        if (!is_string($value)) {
+        if (!\is_string($value)) {
             throw new InvalidConfigurationException(sprintf('Expected boolean or string value for option "%s".', $optionName));
         }
 

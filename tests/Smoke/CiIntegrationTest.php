@@ -128,7 +128,7 @@ final class CiIntegrationTest extends TestCase
             $steps[4],
         ]);
 
-        $optionalIncompatibilityWarning = 'PHP needs to be a minimum version of PHP 5.6.0 and maximum version of PHP 7.2.*.
+        $optionalIncompatibilityWarning = 'PHP needs to be a minimum version of PHP 5.6.0 and maximum version of PHP 7.3.*.
 Ignoring environment requirements because `PHP_CS_FIXER_IGNORE_ENV` is set. Execution may be unstable.
 ';
 
@@ -141,7 +141,7 @@ If you need help while solving warnings, ask at https://gitter.im/PHP-CS-Fixer, 
             preg_quote($optionalIncompatibilityWarning, '/'),
             preg_quote($optionalXdebugWarning, '/'),
             preg_quote('Loaded config default from ".php_cs.dist".', '/'),
-            strlen($expectedResult3Files),
+            \strlen($expectedResult3Files),
             preg_quote('Legend: ?-unknown, I-invalid file syntax, file ignored, S-Skipped, .-no changes, F-fixed, E-error', '/')
         );
 
