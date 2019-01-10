@@ -15,7 +15,7 @@ namespace PhpCsFixer\Fixer\LanguageConstruct;
 use PhpCsFixer\AbstractFixer;
 use PhpCsFixer\FixerDefinition\CodeSample;
 use PhpCsFixer\FixerDefinition\FixerDefinition;
-use PhpCsFixer\Tokenizer\CT;
+use PhpCsFixer\Tokenizer\Analyzer\FunctionsAnalyzer;
 use PhpCsFixer\Tokenizer\Token;
 use PhpCsFixer\Tokenizer\Tokens;
 
@@ -70,6 +70,7 @@ final class IsNullFixer extends AbstractFixer
     protected function applyFix(\SplFileInfo $file, Tokens $tokens)
     {
         static $sequenceNeeded = [[T_STRING, 'is_null'], '('];
+        $functionsAnalyzer = new FunctionsAnalyzer();
 
         $currIndex = 0;
         while (null !== $currIndex) {
@@ -86,47 +87,40 @@ final class IsNullFixer extends AbstractFixer
             // move the cursor just after the sequence
             list($isNullIndex, $currIndex) = $matches;
 
+            if (!$functionsAnalyzer->isGlobalFunctionCall($tokens, $matches[0])) {
+                continue;
+            }
+
             $next = $tokens->getNextMeaningfulToken($currIndex);
             if ($tokens[$next]->equals(')')) {
                 continue;
             }
 
-            // skip all expressions which are not a function reference
-            $inversionCandidateIndex = $prevTokenIndex = $tokens->getPrevMeaningfulToken($matches[0]);
-            $prevToken = $tokens[$prevTokenIndex];
-            if ($prevToken->isGivenKind([T_DOUBLE_COLON, T_NEW, T_OBJECT_OPERATOR, T_FUNCTION])) {
-                continue;
-            }
+            $prevTokenIndex = $tokens->getPrevMeaningfulToken($matches[0]);
 
             // handle function references with namespaces
-            if ($prevToken->isGivenKind(T_NS_SEPARATOR)) {
-                $inversionCandidateIndex = $twicePrevTokenIndex = $tokens->getPrevMeaningfulToken($prevTokenIndex);
-                /** @var Token $twicePrevToken */
-                $twicePrevToken = $tokens[$twicePrevTokenIndex];
-                if ($twicePrevToken->isGivenKind([T_DOUBLE_COLON, T_NEW, T_OBJECT_OPERATOR, T_FUNCTION, T_STRING, CT::T_NAMESPACE_OPERATOR])) {
-                    continue;
-                }
-
-                // get rid of the root namespace when it used and check if the inversion operator provided
+            if ($tokens[$prevTokenIndex]->isGivenKind(T_NS_SEPARATOR)) {
                 $tokens->removeTrailingWhitespace($prevTokenIndex);
                 $tokens->clearAt($prevTokenIndex);
+
+                $prevTokenIndex = $tokens->getPrevMeaningfulToken($prevTokenIndex);
             }
 
             // check if inversion being used, text comparison is due to not existing constant
             $isInvertedNullCheck = false;
-            if ($tokens[$inversionCandidateIndex]->equals('!')) {
+            if ($tokens[$prevTokenIndex]->equals('!')) {
                 $isInvertedNullCheck = true;
 
                 // get rid of inverting for proper transformations
-                $tokens->removeTrailingWhitespace($inversionCandidateIndex);
-                $tokens->clearAt($inversionCandidateIndex);
+                $tokens->removeTrailingWhitespace($prevTokenIndex);
+                $tokens->clearAt($prevTokenIndex);
             }
 
             // before getting rind of `()` around a parameter, ensure it's not assignment/ternary invariant
             $referenceEnd = $tokens->findBlockEnd(Tokens::BLOCK_TYPE_PARENTHESIS_BRACE, $matches[1]);
             $isContainingDangerousConstructs = false;
             for ($paramTokenIndex = $matches[1]; $paramTokenIndex <= $referenceEnd; ++$paramTokenIndex) {
-                if (in_array($tokens[$paramTokenIndex]->getContent(), ['?', '?:', '='], true)) {
+                if (\in_array($tokens[$paramTokenIndex]->getContent(), ['?', '?:', '='], true)) {
                     $isContainingDangerousConstructs = true;
 
                     break;
@@ -139,12 +133,16 @@ final class IsNullFixer extends AbstractFixer
             $parentOperations = [T_IS_EQUAL, T_IS_NOT_EQUAL, T_IS_IDENTICAL, T_IS_NOT_IDENTICAL];
             $wrapIntoParentheses = $parentLeftToken->isGivenKind($parentOperations) || $parentRightToken->isGivenKind($parentOperations);
 
+            // possible trailing comma removed
+            $prevIndex = $tokens->getPrevMeaningfulToken($referenceEnd);
+            if ($tokens[$prevIndex]->equals(',')) {
+                $tokens->clearTokenAndMergeSurroundingWhitespace($prevIndex);
+            }
+
             if (!$isContainingDangerousConstructs) {
-                if (!$wrapIntoParentheses) {
-                    // closing parenthesis removed with leading spaces
-                    $tokens->removeLeadingWhitespace($referenceEnd);
-                    $tokens->clearAt($referenceEnd);
-                }
+                // closing parenthesis removed with leading spaces
+                $tokens->removeLeadingWhitespace($referenceEnd);
+                $tokens->clearAt($referenceEnd);
 
                 // opening parenthesis removed with trailing spaces
                 $tokens->removeLeadingWhitespace($matches[1]);
@@ -162,6 +160,7 @@ final class IsNullFixer extends AbstractFixer
 
             if ($wrapIntoParentheses) {
                 array_unshift($replacement, new Token('('));
+                $tokens->insertAt($referenceEnd + 1, new Token(')'));
             }
 
             $tokens->overrideRange($isNullIndex, $isNullIndex, $replacement);

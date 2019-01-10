@@ -65,7 +65,7 @@ Files that were not fixed due to errors reported during %s:
         %s (%d)    '.'
                             '.'
 ',
-                get_class($source),
+                \get_class($source),
                 $source->getMessage(),
                 $source->getCode()
             );
@@ -151,7 +151,7 @@ EOT;
      */
     private function createStreamOutput($verbosityLevel)
     {
-        $output = new StreamOutput(fopen('php://memory', 'wb', false));
+        $output = new StreamOutput(fopen('php://memory', 'w', false));
         $output->setDecorated(false);
         $output->setVerbosity($verbosityLevel);
 

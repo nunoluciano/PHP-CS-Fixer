@@ -105,10 +105,6 @@ public function testItDoesSomething() {}}'.$this->whitespacesConfig->getLineEndi
                 ->setAllowedValues(['prefix', 'annotation'])
                 ->setDefault('prefix')
                 ->getOption(),
-            (new FixerOptionBuilder('case', 'Whether to camel or snake case when adding the test prefix'))
-                ->setAllowedValues(['camel', 'snake'])
-                ->setDefault('camel')
-                ->getOption(),
         ]);
     }
 
@@ -144,7 +140,7 @@ public function testItDoesSomething() {}}'.$this->whitespacesConfig->getLineEndi
 
             $lines = $this->addTestAnnotation($lines, $tokens, $docBlockIndex);
 
-            $lines = implode($lines);
+            $lines = implode('', $lines);
             $tokens[$docBlockIndex] = new Token([T_DOC_COMMENT, $lines]);
         }
     }
@@ -166,7 +162,7 @@ public function testItDoesSomething() {}}'.$this->whitespacesConfig->getLineEndi
 
             $lines = $this->updateDocBlock($tokens, $docBlockIndex);
 
-            $lines = implode($lines);
+            $lines = implode('', $lines);
             $tokens[$docBlockIndex] = new Token([T_DOC_COMMENT, $lines]);
 
             $functionNameIndex = $tokens->getNextMeaningfulToken($i);
@@ -236,7 +232,7 @@ public function testItDoesSomething() {}}'.$this->whitespacesConfig->getLineEndi
      */
     private function startsWith($needle, $haystack)
     {
-        $len = strlen($needle);
+        $len = \strlen($needle);
 
         return substr($haystack, 0, $len) === $needle;
     }
@@ -312,10 +308,6 @@ public function testItDoesSomething() {}}'.$this->whitespacesConfig->getLineEndi
      */
     private function addTestPrefix($functionName)
     {
-        if ('camel' !== $this->configuration['case']) {
-            return 'test_'.$functionName;
-        }
-
         return'test'.ucfirst($functionName);
     }
 
@@ -390,9 +382,9 @@ public function testItDoesSomething() {}}'.$this->whitespacesConfig->getLineEndi
             }
 
             if (!$needsAnnotation &&
-                false !== \strpos($lines[$i]->getContent(), ' @test') &&
-                false === \strpos($lines[$i]->getContent(), '@testWith') &&
-                false === \strpos($lines[$i]->getContent(), '@testdox')
+                false !== strpos($lines[$i]->getContent(), ' @test') &&
+                false === strpos($lines[$i]->getContent(), '@testWith') &&
+                false === strpos($lines[$i]->getContent(), '@testdox')
             ) {
                 // We remove @test from the doc block
                 $lines[$i] = new Line(str_replace(' @test', '', $lines[$i]->getContent()));
@@ -438,9 +430,9 @@ public function testItDoesSomething() {}}'.$this->whitespacesConfig->getLineEndi
     private function getSingleLineDocBlockEntry($line)
     {
         $line = $line[0];
-        $line = \str_replace('*/', '', $line);
+        $line = str_replace('*/', '', $line);
         $line = trim($line);
-        $line = \str_split($line);
+        $line = str_split($line);
         $i = \count($line);
         do {
             --$i;
@@ -448,9 +440,9 @@ public function testItDoesSomething() {}}'.$this->whitespacesConfig->getLineEndi
         if (' ' === $line[$i]) {
             ++$i;
         }
-        $line = array_slice($line, $i);
+        $line = \array_slice($line, $i);
 
-        return implode($line);
+        return implode('', $line);
     }
 
     /**
@@ -476,17 +468,17 @@ public function testItDoesSomething() {}}'.$this->whitespacesConfig->getLineEndi
      */
     private function removeTestPrefixFromDependsAnnotation(Line $line)
     {
-        $line = \str_split($line->getContent());
+        $line = str_split($line->getContent());
 
         $dependsIndex = $this->findWhereDependsFunctionNameStarts($line);
-        $dependsFunctionName = implode(array_slice($line, $dependsIndex));
+        $dependsFunctionName = implode('', \array_slice($line, $dependsIndex));
 
         if ($this->startsWith('test', $dependsFunctionName)) {
             $dependsFunctionName = $this->removeTestPrefix($dependsFunctionName);
         }
         array_splice($line, $dependsIndex);
 
-        return new Line(implode($line).$dependsFunctionName);
+        return new Line(implode('', $line).$dependsFunctionName);
     }
 
     /**
@@ -496,9 +488,9 @@ public function testItDoesSomething() {}}'.$this->whitespacesConfig->getLineEndi
      */
     private function addTestPrefixToDependsAnnotation(Line $line)
     {
-        $line = \str_split($line->getContent());
+        $line = str_split($line->getContent());
         $dependsIndex = $this->findWhereDependsFunctionNameStarts($line);
-        $dependsFunctionName = implode(array_slice($line, $dependsIndex));
+        $dependsFunctionName = implode('', \array_slice($line, $dependsIndex));
 
         if (!$this->startsWith('test', $dependsFunctionName)) {
             $dependsFunctionName = $this->addTestPrefix($dependsFunctionName);
@@ -506,7 +498,7 @@ public function testItDoesSomething() {}}'.$this->whitespacesConfig->getLineEndi
 
         array_splice($line, $dependsIndex);
 
-        return new Line(implode($line).$dependsFunctionName);
+        return new Line(implode('', $line).$dependsFunctionName);
     }
 
     /**

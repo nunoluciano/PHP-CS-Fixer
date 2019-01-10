@@ -72,7 +72,7 @@ final class CommentToPhpdocFixer extends AbstractFixer implements WhitespacesAwa
     {
         $commentsAnalyzer = new CommentsAnalyzer();
 
-        for ($index = 0, $limit = count($tokens); $index < $limit; ++$index) {
+        for ($index = 0, $limit = \count($tokens); $index < $limit; ++$index) {
             $token = $tokens[$index];
 
             if (!$token->isGivenKind(T_COMMENT)) {
@@ -120,7 +120,7 @@ final class CommentToPhpdocFixer extends AbstractFixer implements WhitespacesAwa
      */
     private function fixComment(Tokens $tokens, $indices)
     {
-        if (1 === count($indices)) {
+        if (1 === \count($indices)) {
             $this->fixCommentSingleLine($tokens, reset($indices));
         } else {
             $this->fixCommentMultiLine($tokens, $indices);
@@ -155,18 +155,26 @@ final class CommentToPhpdocFixer extends AbstractFixer implements WhitespacesAwa
         $startIndex = reset($indices);
         $indent = Utils::calculateTrailingWhitespaceIndent($tokens[$startIndex - 1]);
 
-        $content = '/**'.$this->whitespacesConfig->getLineEnding();
+        $newContent = '/**'.$this->whitespacesConfig->getLineEnding();
         $count = max($indices);
 
         for ($index = $startIndex; $index <= $count; ++$index) {
-            if ($tokens[$index]->isComment()) {
-                $content .= $indent.' *'.$this->getMessage($tokens[$index]->getContent()).$this->whitespacesConfig->getLineEnding();
+            if (!$tokens[$index]->isComment()) {
+                continue;
             }
+            if (false !== strpos($tokens[$index]->getContent(), '*/')) {
+                return;
+            }
+            $newContent .= $indent.' *'.$this->getMessage($tokens[$index]->getContent()).$this->whitespacesConfig->getLineEnding();
+        }
+
+        for ($index = $startIndex; $index <= $count; ++$index) {
             $tokens->clearAt($index);
         }
-        $content .= $indent.' */';
 
-        $tokens->insertAt($startIndex, new Token([T_DOC_COMMENT, $content]));
+        $newContent .= $indent.' */';
+
+        $tokens->insertAt($startIndex, new Token([T_DOC_COMMENT, $newContent]));
     }
 
     private function getMessage($content)

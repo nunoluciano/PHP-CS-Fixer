@@ -182,7 +182,9 @@ final class RuleSetTest extends TestCase
                 'line_ending' => true,
                 'lowercase_constants' => true,
                 'lowercase_keywords' => true,
-                'method_argument_space' => true,
+                'method_argument_space' => [
+                    'on_multiline' => 'ensure_fully_multiline',
+                ],
                 'no_break_comment' => true,
                 'no_closing_tag' => true,
                 'no_spaces_after_function_name' => true,
@@ -222,7 +224,9 @@ final class RuleSetTest extends TestCase
                 'line_ending' => true,
                 'lowercase_constants' => true,
                 'lowercase_keywords' => true,
-                'method_argument_space' => true,
+                'method_argument_space' => [
+                    'on_multiline' => 'ensure_fully_multiline',
+                ],
                 'no_break_comment' => true,
                 'no_closing_tag' => true,
                 'no_spaces_after_function_name' => true,
@@ -542,7 +546,7 @@ final class RuleSetTest extends TestCase
         }
 
         foreach ($data as $key => $value) {
-            if (is_array($value)) {
+            if (\is_array($value)) {
                 $this->sort($data[$key]);
             }
         }
@@ -556,7 +560,7 @@ final class RuleSetTest extends TestCase
     private function allInteger(array $values)
     {
         foreach ($values as $value) {
-            if (!is_int($value)) {
+            if (!\is_int($value)) {
                 return false;
             }
         }

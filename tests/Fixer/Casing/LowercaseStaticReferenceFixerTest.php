@@ -134,6 +134,15 @@ final class LowercaseStaticReferenceFixerTest extends AbstractFixerTestCase
                     };
                 ',
             ],
+            [
+                '<?php class A { const PARENT = 42; }',
+            ],
+            [
+                '<?php namespace Foo\Parent;',
+            ],
+            [
+                '<?php namespace Parent\Foo;',
+            ],
         ];
     }
 
@@ -165,6 +174,9 @@ final class LowercaseStaticReferenceFixerTest extends AbstractFixerTestCase
             ],
             [
                 '<?php class Foo extends Bar { public function baz() : Self\Qux {} }',
+            ],
+            [
+                '<?php namespace Parent;',
             ],
         ];
     }
